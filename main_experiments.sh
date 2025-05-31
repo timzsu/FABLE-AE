@@ -3,7 +3,7 @@
 R=$1
 HOST=${2:-'127.0.0.1'}
 NUM_REPEAT=${3:-1}
-FABLE_EXECUTABLE=${4:-'/workspace/FABLE/build/bin/fable'}
+FABLE_DIR=${4:-'/workspace/FABLE'}
 NET_INTERFACE="$(ip link show | grep UP | sed -n '2p' | awk '{print $2}' | cut -d: -f1 | cut -d@ -f1)"
 
 netunset() {
@@ -19,6 +19,7 @@ alias netctrl4="tc qdisc add dev $NET_INTERFACE root netem delay 80ms rate 100mb
 SCRIPT_PATH="$(dirname "$(readlink -f "$0")")"
 LOG_DIR=$SCRIPT_PATH/logs
 mkdir -p $LOG_DIR
+cd $FABLE_DIR
 
 echo "running SPLUT-like table configuration"
 for bit in {20..28..4}; do
@@ -31,7 +32,7 @@ for bit in {20..28..4}; do
         ${BASH_ALIASES[netctrl$s]}
         echo "config: inputbitsize=$bit, outputbitsize=$bit, netconfig=$s"
         for repeat_id in $(seq 1 "$NUM_REPEAT"); do
-            $FABLE_EXECUTABLE $HOST l=1 bs=4096 thr=32 h=0 r=$R > $LOG_DIR/in$bit-out$bit-netconf$s-bs4096-thr32-h0-$repeat_id.log
+            $FABLE_DIR/build/bin/fable $HOST l=1 bs=4096 thr=32 h=0 r=$R > $LOG_DIR/in$bit-out$bit-netconf$s-bs4096-thr32-h0-$repeat_id.log
         done
     done
 
@@ -41,7 +42,7 @@ for bit in {20..28..4}; do
         ${BASH_ALIASES[netctrl$s]}
         echo "config: inputbitsize=$bit, outputbitsize=$bit, netconfig=$s"
         for repeat_id in $(seq 1 "$NUM_REPEAT"); do
-            $FABLE_EXECUTABLE $HOST l=1 bs=4096 thr=32 h=1 r=$R > $LOG_DIR/in$bit-out$bit-netconf$s-bs4096-thr32-h1-$repeat_id.log
+            $FABLE_DIR/build/bin/fable $HOST l=1 bs=4096 thr=32 h=1 r=$R > $LOG_DIR/in$bit-out$bit-netconf$s-bs4096-thr32-h1-$repeat_id.log
         done
     done
 
@@ -53,7 +54,7 @@ for bit in {20..28..4}; do
             echo "netconfig=$s"
             for bs in 1 256 512 1024 2048; do
                 for repeat_id in $(seq 1 "$NUM_REPEAT"); do
-                    $FABLE_EXECUTABLE $HOST l=1 bs=$bs thr=32 h=0 r=$R > $LOG_DIR/in$bit-out$bit-netconf$s-bs$bs-thr32-h0-$repeat_id.log
+                    $FABLE_DIR/build/bin/fable $HOST l=1 bs=$bs thr=32 h=0 r=$R > $LOG_DIR/in$bit-out$bit-netconf$s-bs$bs-thr32-h0-$repeat_id.log
                 done
             done
         done
@@ -67,7 +68,7 @@ for bit in {20..28..4}; do
             echo "netconfig=$s"
             for thr in 1 2 4 8 16; do
                 for repeat_id in $(seq 1 "$NUM_REPEAT"); do
-                    $FABLE_EXECUTABLE $HOST l=1 bs=4096 thr=$thr h=0 r=$R > $LOG_DIR/in$bit-out$bit-netconf$s-bs4096-thr$thr-h0-$repeat_id.log
+                    $FABLE_DIR/build/bin/fable $HOST l=1 bs=4096 thr=$thr h=0 r=$R > $LOG_DIR/in$bit-out$bit-netconf$s-bs4096-thr$thr-h0-$repeat_id.log
                 done
             done
         done
@@ -87,7 +88,7 @@ do
         ${BASH_ALIASES[netctrl$s]}
         echo "config: inputbitsize=$bit, outputbitsize=$bit, netconfig=$s"
         for repeat_id in $(seq 1 "$NUM_REPEAT"); do
-            $FABLE_EXECUTABLE $HOST l=1 bs=4096 thr=16 h=0 r=$R > $LOG_DIR/in$bit-out64-netconf$s-bs4096-thr32-h0-$repeat_id.log
+            $FABLE_DIR/build/bin/fable $HOST l=1 bs=4096 thr=16 h=0 r=$R > $LOG_DIR/in$bit-out64-netconf$s-bs4096-thr32-h0-$repeat_id.log
         done
     done
     
@@ -99,7 +100,7 @@ do
             echo "netconfig=$s"
             for bs in 1 256 512 1024 2048; do
                 for repeat_id in $(seq 1 "$NUM_REPEAT"); do
-                    $FABLE_EXECUTABLE $HOST l=1 bs=$bs thr=32 h=0 r=$R > $LOG_DIR/in$bit-out64-netconf$s-bs$bs-thr32-h0-$repeat_id.log
+                    $FABLE_DIR/build/bin/fable $HOST l=1 bs=$bs thr=32 h=0 r=$R > $LOG_DIR/in$bit-out64-netconf$s-bs$bs-thr32-h0-$repeat_id.log
                 done
             done
         done
