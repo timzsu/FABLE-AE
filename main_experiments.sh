@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Scripts to launch main experiments. Approximately take 10 hours. 
+
 R=$1
 HOST=${2:-'127.0.0.1'}
 NUM_REPEAT=${3:-1}
@@ -100,7 +102,7 @@ do
             echo "netconfig=$s"
             for bs in 1 256 512 1024 2048; do
                 for repeat_id in $(seq 1 "$NUM_REPEAT"); do
-                    $FABLE_DIR/build/bin/fable $HOST l=1 bs=$bs thr=32 h=0 r=$R > $LOG_DIR/in$bit-out64-netconf$s-bs$bs-thr32-h0-$repeat_id.log
+                    $FABLE_DIR/build/bin/fable $HOST l=1 bs=$bs thr=16 h=0 r=$R > $LOG_DIR/in$bit-out64-netconf$s-bs$bs-thr32-h0-$repeat_id.log
                 done
             done
         done

@@ -17,3 +17,33 @@ and
 bash main_experiments.sh 2 $HOST
 ```
 On two machines, where `$HOST` is the IP address of the machine running the first command. 
+
+## Baseline
+
+### SPLUT
+
+To reproduce the splut baseline, run 
+```bash
+bash baseline_splut.sh 1 $HOST
+```
+and
+```bash
+bash baseline_splut.sh 2 $HOST
+```
+On two machines, where `$HOST` is the IP address of the machine running the first command. 
+
+### FLORAM and 2P-DUORAM
+
+TODO
+
+## Applications
+
+To reproduce the applications, run 
+```bash
+bash applications.sh 1 $HOST
+```
+and
+```bash
+bash applications.sh 2 $HOST
+```
+On two machines, where `$HOST` is the IP address of the machine running the first command. 
