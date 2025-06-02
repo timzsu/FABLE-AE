@@ -19,7 +19,7 @@ alias netctrl3="tc qdisc add dev $NET_INTERFACE root netem delay 40ms rate 200mb
 alias netctrl4="tc qdisc add dev $NET_INTERFACE root netem delay 80ms rate 100mbit"
 
 SCRIPT_PATH="$(dirname "$(readlink -f "$0")")"
-LOG_DIR=$SCRIPT_PATH/logs
+LOG_DIR=$SCRIPT_PATH/logs/main
 mkdir -p $LOG_DIR
 cd $FABLE_DIR
 

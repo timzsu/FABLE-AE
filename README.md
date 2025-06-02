@@ -24,7 +24,7 @@ On two machines, where `$HOST` is the IP address of the machine running the firs
 
 To reproduce the splut baseline, run 
 ```bash
-bash baseline_splut.sh 1 $HOST
+bash baseline_splut.sh 1 0.0.0.0
 ```
 and
 ```bash

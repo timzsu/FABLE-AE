@@ -26,13 +26,12 @@ cd $FABLE_DIR
 cmake -S . -B build
 cmake --build ./build --target splut --parallel
 
-for bit in {20..28..4}; do
-    for s in {1..4}; do
-        netunset
-        ${BASH_ALIASES[netctrl$s]}
-        echo "config: inputbitsize=$bit, outputbitsize=$bit, netconfig=$s"
-        for repeat_id in $(seq 1 "$NUM_REPEAT"); do
-            $FABLE_DIR/build/bin/splut ip=$HOST p=8100 len=$bit l=1 s=4096 t=32 r=$R > $LOG_DIR/splut-in$bit-out$bit-netconf$s-bs4096-thr32-$repeat_id.log
-        done
+for s in {1..4}; do
+    netunset
+    ${BASH_ALIASES[netctrl$s]}
+    for repeat_id in $(seq 1 "$NUM_REPEAT"); do
+        $FABLE_DIR/build/bin/splut ip=$HOST p=8100 len=20 l=1 bs=256 thr=32 r=$R > $LOG_DIR/splut-in20-out20-netconf$s-bs256-thr32-$repeat_id.log
+        $FABLE_DIR/build/bin/splut ip=$HOST p=8100 len=24 l=1 bs=16 thr=32 r=$R > $LOG_DIR/splut-in24-out24-netconf$s-bs16-thr32-$repeat_id.log
+        $FABLE_DIR/build/bin/splut ip=$HOST p=8100 len=28 l=1 bs=1 thr=32 r=$R > $LOG_DIR/splut-in28-out28-netconf$s-bs1-thr32-$repeat_id.log
     done
 done
