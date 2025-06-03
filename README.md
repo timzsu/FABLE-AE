@@ -10,7 +10,7 @@ Please use Docker to install the dependencies. To do this, build a Docker image 
 
 To reproduce the main experiments, run 
 ```bash
-bash main_experiments.sh 1 $HOST
+bash main_experiments.sh 1 0.0.0.0
 ```
 and
 ```bash
@@ -34,7 +34,17 @@ On two machines, where `$HOST` is the IP address of the machine running the firs
 
 ### FLORAM and 2P-DUORAM
 
-TODO
+FLORAM and 2P-DUORAM are benchmarked using their official implementation. 
+
+## Plots
+
+To plot the figures, please run 
+1. `python microbench.py`, which will produce `plots/runtime_vs_threads.pdf` (Figure 4). 
+2. `python draw.py`, which will produce
+    1. `FABLE-AE/plots/time_lutsize_network_clipped.pdf` (Figure 5)
+    2. `FABLE-AE/plots/24_time_bs.pdf` (Figure 6)
+    3. `FABLE-AE/plots/comm.pdf` (Figure 7)
+    4. `FABLE-AE/plots/time_lutsize_network.pdf` (Figure 8)
 
 ## Applications
 

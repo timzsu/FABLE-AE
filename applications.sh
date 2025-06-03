@@ -32,7 +32,6 @@ for s in {1..4..3}; do
     ${BASH_ALIASES[netctrl$s]}
     for repeat_id in $(seq 1 "$NUM_REPEAT"); do
         $FABLE_DIR/build/bin/embedding $HOST r=$R > $LOG_DIR/embedding-FABLE-netconf$s-$repeat_id.log
-        # python3 src/applications/embedding-baseline.py --addr $HOST --port 8100 -r $(($int_rank-1)) > $LOG_DIR/embedding-baseline-netconf$s-$repeat_id.log
     done
 done
 
