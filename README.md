@@ -1,6 +1,6 @@
-# Artifact Evaluation for FABLE: Batched Evaluation on Confidential Lookup Tables in 2PC
+# The Artifact of FABLE: Batched Evaluation on Confidential Lookup Tables in 2PC
 
-This is the artifact evaluation for the USENIX Security '25 paper "FABLE: Batched Evaluation on Confidential Lookup Tables in 2PC". 
+This is the artifact of the USENIX Security '25 paper "FABLE: Batched Evaluation on Confidential Lookup Tables in 2PC". 
 
 This version is for availability evaluation, where we provide
 1. The code for the FABLE protocol plus the two applications. 
