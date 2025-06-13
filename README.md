@@ -1,6 +1,8 @@
 # The Artifact of FABLE: Batched Evaluation on Confidential Lookup Tables in 2PC
 
-This is the artifact of the USENIX Security '25 paper "FABLE: Batched Evaluation on Confidential Lookup Tables in 2PC". 
+This is the artifact evaluation repository of the USENIX Security '25 paper "FABLE: Batched Evaluation on Confidential Lookup Tables in 2PC". 
+
+The main implementation is at https://github.com/timzsu/FABLE, and the paper can be found at https://eprint.iacr.org/2025/1081. 
 
 This version is for availability evaluation, where we provide
 1. The code for the FABLE protocol plus the two applications. 
@@ -10,7 +12,7 @@ This version is for availability evaluation, where we provide
 
 ## Dependency Installation
 
-Please use Docker to install the dependencies. To do this, first build a Docker image with the Dockerfile in the FABLE folder, and then build a Docker image for AE using the [Dockerfile](./Dockerfile) in the FABLE-AE folder. Assume you are in the root directory of the artifact (i.e. the parent directory of `FABLE-AE`), then you can run:
+Please use Docker to install the dependencies. To do this, first build a Docker image with the Dockerfile in the FABLE folder, and then build a Docker image for AE using the [Dockerfile](./Dockerfile) in the FABLE-AE folder. Assume you are in the root directory of the artifact (i.e., the parent directory of `FABLE-AE`), then you can run:
 ```bash
 sudo docker build ./FABLE -t fable:1.0
 sudo docker build ./FABLE-AE -t fable-ae:1.0
