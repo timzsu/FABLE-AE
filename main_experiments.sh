@@ -88,7 +88,7 @@ do
     for s in {1..4}; do
         netunset
         ${BASH_ALIASES[netctrl$s]}
-        echo "config: inputbitsize=$bit, outputbitsize=$bit, netconfig=$s"
+        echo "config: inputbitsize=$bit, outputbitsize=64, netconfig=$s"
         for repeat_id in $(seq 1 "$NUM_REPEAT"); do
             $FABLE_DIR/build/bin/fable $HOST l=1 bs=4096 thr=16 h=0 r=$R > $LOG_DIR/in$bit-out64-netconf$s-bs4096-thr16-h0-$repeat_id.log
         done
