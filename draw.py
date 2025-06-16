@@ -1,3 +1,4 @@
+import re
 import matplotlib.pyplot as plt
 import scienceplots
 from matplotlib import font_manager
@@ -7,13 +8,21 @@ import os, json
 from collections import defaultdict 
 import numpy as np
 from pathlib import Path
+from argparse import ArgumentParser
+
+parser = ArgumentParser(description="Draw plots from FABLE logs.")
+parser.add_argument("--doram-baseline", action="store_true", help="Use the provided baseline numbers.")
+parser.add_argument("--num-repeats", type=int, default=1, help="Number of repeats for each log file.")
+args = parser.parse_args()
 
 our_name = "FABLE"
 our_name_lut = our_name + r" ($\sigma=\delta$, 32 threads)"
 our_name_doram = our_name + r" ($\sigma=64$, 16 threads)"
 logs_fable_folder = Path(__file__).parent / "logs/main"
 logs_baseline_folder = Path(__file__).parent / "logs/baseline"
-num_repeats = 1
+logs_fable_client_folder = Path(__file__).parent / "logs/client/main"
+logs_baseline_client_folder = Path(__file__).parent / "logs/client/baseline"
+num_repeats = args.num_repeats
 plot_folder = Path(__file__).parent / "plots"
 os.makedirs(plot_folder, exist_ok=True)
 
@@ -69,9 +78,35 @@ def read_single_log(log_file_path, name_conversion: dict[str, str] = {"FABLE Exe
 
     return time_list, comm_list
 
+def client_log_name(inbit: int, outbit: int, network: int, bs: int, thr: int, hash_type: int, repeat_id: int) -> Path:
+    return logs_fable_client_folder / f"in{inbit}-out{outbit}-netconf{network+1}-bs{bs}-thr{thr}-h{hash_type}-{repeat_id+1}.log"
+
+def read_client_log(inbit: int, outbit: int, network: int, bs: int, thr: int, hash_type: int, name_conversion: dict[str, str]) -> dict[str, np.ndarray]:
+    log_result = []
+    for repeat_id in range(num_repeats):
+        log_file_path = client_log_name(inbit, outbit, network, bs, thr, hash_type, repeat_id)
+        log_result.append(read_single_log(log_file_path, name_conversion))
+    
+    time_list, comm_list = list(zip(*log_result))
+
+    assert len(time_list) == num_repeats, f"Number of repeats {len(time_list)} does not match expected {num_repeats}."
+
+    avg_time_list: dict[str, np.ndarray] = {}
+    avg_comm_list: dict[str, np.ndarray] = {}
+    # collect from time_list and comm_list
+    for key in name_conversion.values():
+        avg_time_list[key] = sum([time_list[k][key] for k in range(len(time_list))]) / len(time_list)
+        avg_comm_list[key] = sum([comm_list[k][key] for k in range(len(comm_list))]) / len(comm_list)
+        if isinstance(avg_time_list[key], np.ndarray):
+            avg_time_list[key] = avg_time_list[key].item()
+        if isinstance(avg_comm_list[key], np.ndarray):
+            avg_comm_list[key] = avg_comm_list[key].item()
+
+    return avg_time_list, avg_comm_list
+
 def log_name(inbit: int, outbit: int, network: int, bs: int, thr: int, hash_type: int, repeat_id: int) -> Path:
     return logs_fable_folder / f"in{inbit}-out{outbit}-netconf{network+1}-bs{bs}-thr{thr}-h{hash_type}-{repeat_id+1}.log"
-
+    
 buffer = {}
 def read_log(inbit: int, outbit: int, network: int, bs: int, thr: int, hash_type: int, name_conversion: dict[str, str], comm: bool) -> dict[str, np.ndarray]:
     if (inbit, outbit, network, bs, thr, hash_type) not in buffer:
@@ -94,12 +129,42 @@ def read_log(inbit: int, outbit: int, network: int, bs: int, thr: int, hash_type
                 avg_time_list[key] = avg_time_list[key].item()
             if isinstance(avg_comm_list[key], np.ndarray):
                 avg_comm_list[key] = avg_comm_list[key].item()
+        
+        avg_client_time_list, avg_client_comm_list = read_client_log(inbit, outbit, network, bs, thr, hash_type, name_conversion)
+
+        for key in name_conversion.values():
+            avg_time_list[key] = max(avg_time_list[key], avg_client_time_list[key])
+            avg_comm_list[key] += avg_client_comm_list[key]
         buffer[(inbit, outbit, network, bs, thr, hash_type)] = (avg_time_list, avg_comm_list)
 
     return buffer[(inbit, outbit, network, bs, thr, hash_type)][int(comm)]
 
+def splut_client_log_name(inbit: int, outbit: int, network: int, bs: int, thr: int, repeat_id: int) -> Path:
+    return logs_baseline_client_folder / f"splut-in{inbit}-out{outbit}-netconf{network+1}-bs{bs}-thr{thr}-{repeat_id+1}.log"
+
+def read_splut_client_log(inbit: int, outbit: int, network: int, bs: int, thr: int, name_conversion: dict[str, str]) -> dict[str, np.ndarray]:
+    log_result = []
+    for repeat_id in range(num_repeats):
+        log_file_path = splut_client_log_name(inbit, outbit, network, bs, thr, repeat_id)
+        log_result.append(read_single_log(log_file_path, name_conversion))
+    
+    time_list, comm_list = list(zip(*log_result))
+
+    avg_time_list: dict[str, np.ndarray] = {}
+    avg_comm_list: dict[str, np.ndarray] = {}
+    # collect from time_list and comm_list
+    for key in name_conversion.values():
+        avg_time_list[key] = sum([time_list[k][key] for k in range(len(time_list))]) / len(time_list)
+        avg_comm_list[key] = sum([comm_list[k][key] for k in range(len(comm_list))]) / len(comm_list)
+        if isinstance(avg_time_list[key], np.ndarray):
+            avg_time_list[key] = avg_time_list[key].item()
+        if isinstance(avg_comm_list[key], np.ndarray):
+            avg_comm_list[key] = avg_comm_list[key].item()
+
+    return avg_time_list, avg_comm_list
+
 def splut_log_name(inbit: int, outbit: int, network: int, bs: int, thr: int, repeat_id: int) -> Path:
-    return logs_baseline_folder / f"splut-in{inbit}-out{outbit}-netconf{network+1}-bs{bs}-thr{thr}-{repeat_id+1}.log"
+    return logs_baseline_folder / "splut" / f"splut-in{inbit}-out{outbit}-netconf{network+1}-bs{bs}-thr{thr}-{repeat_id+1}.log"
 
 splut_buffer = {}
 def read_splut_log(inbit: int, outbit: int, network: int, bs: int, thr: int, name_conversion: dict[str, str], comm: bool) -> dict[str, np.ndarray]:
@@ -121,9 +186,81 @@ def read_splut_log(inbit: int, outbit: int, network: int, bs: int, thr: int, nam
                 avg_time_list[key] = avg_time_list[key].item()
             if isinstance(avg_comm_list[key], np.ndarray):
                 avg_comm_list[key] = avg_comm_list[key].item()
+        
+        avg_client_time_list, avg_client_comm_list = read_splut_client_log(inbit, outbit, network, bs, thr, name_conversion)
+
+        for key in name_conversion.values():
+            avg_time_list[key] = max(avg_time_list[key], avg_client_time_list[key])
+            avg_comm_list[key] += avg_client_comm_list[key]
         splut_buffer[(inbit, outbit, network, bs, thr)] = (avg_time_list, avg_comm_list)
 
     return splut_buffer[(inbit, outbit, network, bs, thr)][int(comm)]
+
+netconfigs = [
+    "800us_3gbit", 
+    "800us_1gbit", 
+    "40ms_200mbit", 
+    "80ms_100mbit", 
+]
+
+def doram_log_name(inbit: int, network: int, doram_type: str, repeat: int) -> Path:
+    return logs_baseline_folder / doram_type / f"{inbit}_{netconfigs[network]}_{repeat}.out"
+
+def read_floram_log(inbit: int, network: int, repeat: int=5, comm: bool=False) -> int:
+    log_path = doram_log_name(inbit, network, "floram", repeat)
+    lines = open(log_path).readlines()
+    pattern = r'ORAM Read \(count:(\d+), size: (\d+)\): (\d+) microseconds avg, (\d+) gates avg, (\d+) bytes avg'
+    times = []
+    comms = []
+    for line in lines:
+        match = re.match(pattern, line)
+        if match:
+            assert int(match.group(1)) == 2 ** inbit
+            assert int(match.group(2)) == 8
+
+            times.append(int(match.group(3)) / 1e3)
+            comms.append(int(match.group(5)))
+    
+    assert len(times) == len(comms) == 2
+    if comm:
+        return sum(comms)
+    else:
+        return max(times)
+
+def read_duoram_log(inbit: int, network: int, repeat: int=5, comm: bool=False) -> int:
+    log_path = doram_log_name(inbit, network, "duoram", repeat)
+    lines = open(log_path).readlines()
+    preprocess_time_pattern = r'Total preprocessing time: (\d+) µs'
+    preprocess_comm_pattern = r'Total preprocessing bytes: (\d+)'
+    query_time_pattern = r'Total query time: (\d+) µs'
+    query_comm_pattern = r'Total query bytes: (\d+)'
+    preprocess_times = []
+    preprocess_comms = []
+    query_times = []
+    query_comms = []
+    for line in lines:
+        match = re.match(preprocess_time_pattern, line)
+        if match:
+            preprocess_times.append(int(match.group(1)) / 1e3 / repeat)
+            
+        match = re.match(preprocess_comm_pattern, line)
+        if match:
+            preprocess_comms.append(int(match.group(1)) / repeat)
+            
+        match = re.match(query_time_pattern, line)
+        if match:
+            query_times.append(int(match.group(1)) / 1e3 / repeat)
+            
+        match = re.match(query_comm_pattern, line)
+        if match:
+            query_comms.append(int(match.group(1)) / repeat)
+    
+    assert len(preprocess_times) == len(preprocess_comms) == 2
+    assert len(query_times) == len(query_comms) == 2
+    if comm:
+        return sum(preprocess_comms) + sum(query_comms)
+    else:
+        return max(preprocess_times) + max(query_times)
 
 def draw_time_bs_big(data: list[tuple], baseline: list[dict], folder: str, ylim: tuple[float, float], yticks: list[int], ncols: int) -> None: 
     orig_fontsize = plt.rcParams.get('font.size')
@@ -460,10 +597,6 @@ varyingbs_comm_o64 = np.array([
     for network_idx in [0, 3]
 ]).mean(0) / (2**10) # [network index][batch index]
 
-# Load ORAM jsons
-floram_json = json.load(open(Path(__file__).parent / 'ORAMs/floram.json'))
-duoram_json = json.load(open(Path(__file__).parent / 'ORAMs/duoram.json'))
-
 splut_name_conversion = {"SPLUT+": "SP-LUT+"}
 splut_factors = np.array([256, 16, 1])
 splut_avg_time = np.array([
@@ -479,6 +612,49 @@ splut_avg_comm = np.array([
 
 flute_comm = np.array([4.236 * (2**l - l - 1) + 2*l for l in lut_bitlengths]) / 8 / (2**10)
 
+# Load ORAM jsons
+if args.doram_baseline:
+    floram_avg_time = np.array([
+        [read_floram_log(lut_bitlength, network_idx, comm=False)
+        for lut_bitlength in lut_bitlengths]
+        for network_idx in range(4)
+    ]) # [network index][lut index]
+    floram_avg_comm = np.array([
+        [read_floram_log(lut_bitlength, network_idx, comm=True)
+        for lut_bitlength in lut_bitlengths]
+        for network_idx in range(4)
+    ]).mean(0) / (2**10) # [lut index]
+
+    duoram_avg_time = np.array([
+        [read_duoram_log(lut_bitlength, network_idx, comm=False)
+        for lut_bitlength in lut_bitlengths]
+        for network_idx in range(4)
+    ]) # [network index][lut index]
+    duoram_avg_comm = np.array([
+        [read_duoram_log(lut_bitlength, network_idx, comm=True)
+        for lut_bitlength in lut_bitlengths]
+        for network_idx in range(4)
+    ]).mean(0) / (2**10) # [lut index]
+else:
+    floram_json = json.load(open(Path(__file__).parent / 'ORAMs/floram.json'))
+    duoram_json = json.load(open(Path(__file__).parent / 'ORAMs/duoram.json'))
+    floram_avg_time = np.array([
+        floram_json["3Gbps"], 
+        floram_json["1Gbps"], 
+        floram_json["200Mbps"], 
+        floram_json["100Mbps"], 
+    ]) # [network index][lut index]
+    floram_avg_comm = np.array(floram_json["Communication"]) / (2**10)
+    duoram_avg_time = np.array([
+        duoram_json["3Gbps"], 
+        duoram_json["1Gbps"], 
+        duoram_json["200Mbps"], 
+        duoram_json["100Mbps"], 
+    ]) # [network index][lut index]
+    duoram_avg_comm = np.array(duoram_json["Communication"]) / (2**10)
+
+
+
 # varying batch size
 
 draw_time_bs_big(
@@ -487,9 +663,9 @@ draw_time_bs_big(
         {
             "SP-LUT+": (splut_avg_time[0, 1], splut_avg_time[3, 1]),
         }, {
-            "FLORAM": (floram_json["3Gbps"][1], floram_json["100Mbps"][1]),
-            "2P-DUORAM": (duoram_json["3Gbps"][1], duoram_json["100Mbps"][1]),
-            "2P-DUORAM+": (duoram_json["3Gbps"][1] / 2, duoram_json["100Mbps"][1] / 2),
+            "FLORAM": (floram_avg_time[0, 1], floram_avg_time[3, 1]),
+            "2P-DUORAM": (duoram_avg_time[0, 1], duoram_avg_time[3, 1]),
+            "2P-DUORAM+": (duoram_avg_time[0, 1] / 2, duoram_avg_time[3, 1] / 2),
     }], 
     folder=plot_folder, 
     ylim=(5, 3*1e5), 
@@ -503,9 +679,9 @@ draw_comm_big(
         "SP-LUT+": splut_avg_comm,
         "FLUTE": flute_comm, 
     }, {
-        "FLORAM": np.array(floram_json["Communication"]) * 2 / (2 ** 10),
-        "2P-DUORAM": np.array(duoram_json["Communication"]) * 2 / (2 ** 10),
-        "2P-DUORAM+":  np.array(duoram_json["Communication"]) * 2 / (2 ** 10) / 2,
+        "FLORAM": floram_avg_comm,
+        "2P-DUORAM": duoram_avg_comm,
+        "2P-DUORAM+":  duoram_avg_comm / 2,
     }], 
     folder=plot_folder, 
     ylims=[(100, 2*1e6), (2, 2*1e6)], 
@@ -516,27 +692,27 @@ draw_comm_big(
 # The big figure
 lan1_doram = {
     our_name_doram: opt_bs_time_16thr[0] / 4096, 
-    "FLORAM": np.array(floram_json["3Gbps"]), 
-    "2P-DUORAM": np.array(duoram_json["3Gbps"]), 
-    "2P-DUORAM+": np.array(duoram_json["3Gbps"]) / 2, 
+    "FLORAM": floram_avg_time[0], 
+    "2P-DUORAM": duoram_avg_time[0], 
+    "2P-DUORAM+": duoram_avg_time[0] / 2, 
 }
 lan2_doram = {
     our_name_doram: opt_bs_time_16thr[1] / 4096, 
-    "FLORAM": np.array(floram_json["1Gbps"]), 
-    "2P-DUORAM": np.array(duoram_json["1Gbps"]), 
-    "2P-DUORAM+": np.array(duoram_json["1Gbps"]) / 2, 
+    "FLORAM": floram_avg_time[1], 
+    "2P-DUORAM": duoram_avg_time[1], 
+    "2P-DUORAM+": duoram_avg_time[1] / 2, 
 }
 wan1_doram = {
     our_name_doram: opt_bs_time_16thr[2] / 4096, 
-    "FLORAM": np.array(floram_json["200Mbps"]), 
-    "2P-DUORAM": np.array(duoram_json["200Mbps"]), 
-    "2P-DUORAM+": np.array(duoram_json["200Mbps"]) / 2, 
+    "FLORAM": floram_avg_time[2], 
+    "2P-DUORAM": duoram_avg_time[2], 
+    "2P-DUORAM+": duoram_avg_time[2] / 2, 
 }
 wan2_doram = {
     our_name_doram: opt_bs_time_16thr[3] / 4096, 
-    "FLORAM": np.array(floram_json["100Mbps"]), 
-    "2P-DUORAM": np.array(duoram_json["100Mbps"]), 
-    "2P-DUORAM+": np.array(duoram_json["100Mbps"]) / 2, 
+    "FLORAM": floram_avg_time[3], 
+    "2P-DUORAM": duoram_avg_time[3], 
+    "2P-DUORAM+": duoram_avg_time[3] / 2, 
 }
 print("2p-duoram lan1: {:.2f}x ~ {:.2f}x".format(
     np.min(lan1_doram['2P-DUORAM'] / lan1_doram[our_name_doram]), 

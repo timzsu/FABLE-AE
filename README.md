@@ -53,9 +53,28 @@ The logs will be written to `logs/baseline` in `FABLE-AE`.
 
 ### FLORAM and 2P-DUORAM
 
-FLORAM and 2P-DUORAM are benchmarked using their official implementation. The numbers are recorded in `ORAMs/floram.json` and `ORAMs/duoram.json`. 
+FLORAM and 2P-DUORAM are benchmarked using their official implementation. You can skip this step if you would like to use the results we provided in `ORAMs/floram.json` and `ORAMs/duoram.json`. 
+
+To do this, exit the docker for `FABLE-AE` and build their docker with
+```bash
+sudo bash ORAMs/build-dockers.sh
+```
+Then run the experiments with 
+```bash
+sudo bash ORAMs/repro-dockers.sh
+```
 
 ## Plots
+
+Before creating the plots, we need to transfer the logs from the client to the server. To do this, launch 
+```bash
+bash sync_log_serv.sh
+```
+on the client (the second machine), and run
+```bash
+bash sync_log_recv.sh $CLIENT
+```
+on the server (the first machine), where `$CLIENT` is the IP address of the client. 
 
 To plot the figures, please run 
 1. `python3 microbench.py`, which will produce `FABLE-AE/plots/runtime_vs_threads.pdf` (Figure 4). 
@@ -64,6 +83,9 @@ To plot the figures, please run
     2. `FABLE-AE/plots/24_time_bs.pdf` (Figure 6)
     3. `FABLE-AE/plots/comm.pdf` (Figure 7)
     4. `FABLE-AE/plots/time_lutsize_network.pdf` (Figure 8)
+You can add `--doram-baseline` to `python3 draw.py` if you prefer to use the reproduced FLORAM and DUORAM numbers instead of the ones we provided. 
+
+You may also want to reproduce our tables (in markdown format) with `python3 breakdown_table.py` and `python3 breakdown_table.py --aes`. The first one gives the result with LowMC as the OPRF and the second one gives the result with AES as the OPRF. Table 4 in the paper is produced by merging the two tables. 
 
 ## Applications
 

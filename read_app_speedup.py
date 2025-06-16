@@ -2,9 +2,14 @@ import os, json
 from collections import defaultdict 
 import numpy as np
 from pathlib import Path
+from argparse import ArgumentParser
+
+parser = ArgumentParser(description="Application Reader")
+parser.add_argument("--num-repeats", type=int, default=1, help="Number of repeats for each log file.")
+args = parser.parse_args()
 
 logs_applications_folder = Path(__file__).parent / "logs/applications"
-num_repeats = 1
+num_repeats = args.num_repeats
 
 def read_single_log(log_file_path, name_conversion: dict[str, str] = {"FABLE Execution": "FABLE"}) -> tuple[defaultdict[str, np.ndarray], defaultdict[str, np.ndarray]]:
     assert Path(log_file_path).exists(), f"Log file {log_file_path} does not exist."
