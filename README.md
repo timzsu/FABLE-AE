@@ -23,7 +23,7 @@ The image `fable:1.0` contains all dependencies and a built FABLE in `/workspace
 
 To reproduce the main experiments, first create a container on two machines: 
 ```bash
-sudo docker run -it -p 8100:8100 --cap-add=NET_ADMIN -v $PWD/FABLE-AE:/workspace/AE -w /workspace/AE fable-ae:1.0
+sudo docker run -it --net=host --cap-add=NET_ADMIN -v $PWD/FABLE-AE:/workspace/AE -w /workspace/AE fable-ae:1.0
 ```
 Then run 
 ```bash
@@ -111,13 +111,13 @@ sudo docker build FABLE-AE/Crypten -t crypten
 
 To reproduce the performance, run
 ```bash
-sudo docker run -it -p 8100:8100 --cap-add=NET_ADMIN -v $PWD/FABLE-AE:/workspace/AE -w /workspace/AE  crypten
-bash Crypten/reproduce.sh 0 $HOST $CLIENT 8100 8200
+sudo docker run -it --net=host --cap-add=NET_ADMIN -v $PWD/FABLE-AE:/workspace/AE -w /workspace/AE crypten
+bash Crypten/reproduce.sh 0 $HOST $CLIENT
 ```
 and
 ```bash
-sudo docker run -it -p 8200:8200 --cap-add=NET_ADMIN -v $PWD/FABLE-AE:/workspace/AE -w /workspace/AE  crypten
-bash Crypten/reproduce.sh 1 $HOST $CLIENT 8100 8200
+sudo docker run -it --net=host --cap-add=NET_ADMIN -v $PWD/FABLE-AE:/workspace/AE -w /workspace/AE crypten
+bash Crypten/reproduce.sh 1 $HOST $CLIENT
 ```
 on the host and the client respectively. 
 
