@@ -108,18 +108,16 @@ To build the docker,
 ```bash
 sudo docker build FABLE-AE/Crypten -t crypten
 ```
-Then launch the docker with
-```bash
-sudo docker run -it -p 8100:8100 --cap-add=NET_ADMIN -v $PWD/FABLE-AE:/workspace/AE -w /workspace/AE  crypten
-```
 
 To reproduce the performance, run
 ```bash
-bash Crypten/reproduce.sh 0 $HOST $CLIENT
+sudo docker run -it -p 8100:8100 --cap-add=NET_ADMIN -v $PWD/FABLE-AE:/workspace/AE -w /workspace/AE  crypten
+bash Crypten/reproduce.sh 0 $HOST $CLIENT 8100 8200
 ```
 and
 ```bash
-bash Crypten/reproduce.sh 1 $HOST $CLIENT
+sudo docker run -it -p 8200:8200 --cap-add=NET_ADMIN -v $PWD/FABLE-AE:/workspace/AE -w /workspace/AE  crypten
+bash Crypten/reproduce.sh 1 $HOST $CLIENT 8100 8200
 ```
 on the host and the client respectively. 
 

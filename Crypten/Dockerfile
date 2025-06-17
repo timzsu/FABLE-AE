@@ -7,7 +7,7 @@ WORKDIR /workspace
 RUN apt-get update && apt-get install -y software-properties-common
 RUN add-apt-repository ppa:deadsnakes/ppa
 RUN apt-get update && apt-get install -y python3.7-minimal python3.7-venv \
-    git cmake make libssl-dev wget g++-11 libboost-all-dev
+    git cmake make libssl-dev wget g++-11 iproute2
 RUN ln -sf /usr/bin/g++-11 /usr/bin/g++ & ln -sf /usr/bin/g++ /usr/bin/c++
 
 RUN wget https://archives.boost.io/release/1.76.0/source/boost_1_76_0.tar.bz2
