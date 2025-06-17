@@ -100,3 +100,26 @@ bash applications.sh 2 $HOST
 On two machines, where `$HOST` is the IP address of the machine running the first command. 
 
 Afterwards, you can run `python3 read_app_speedup.py` to see the speedup for both applications. 
+
+### Benchmark the Crypten baseline on your own
+Note: Similar to DORAMs, we use a separate environment to benchmark to performance of the Crypten baseline. If you prefer to benchmark the baselines on your own, feel free to follow the instructions: 
+
+To build the docker, 
+```bash
+sudo docker build FABLE-AE/Crypten -t crypten
+```
+Then launch the docker with
+```bash
+sudo docker run -it -p 8100:8100 --cap-add=NET_ADMIN -v $PWD/FABLE-AE:/workspace/AE -w /workspace/AE  crypten
+```
+
+To reproduce the performance, run
+```bash
+bash Crypten/reproduce.sh 0 $HOST $CLIENT
+```
+and
+```bash
+bash Crypten/reproduce.sh 1 $HOST $CLIENT
+```
+on the host and the client respectively. 
+

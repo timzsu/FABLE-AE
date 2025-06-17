@@ -1,0 +1,118 @@
+diff --git a/cmake/BuildBoostLocally.cmake b/cmake/BuildBoostLocally.cmake
+index d7f88cd..338a7dd 100644
+--- a/cmake/BuildBoostLocally.cmake
++++ b/cmake/BuildBoostLocally.cmake
+@@ -3,7 +3,7 @@ message("!!!!! Building boost from sources. This can take a few minutes.")
+ include(ExternalProject)
+ 
+ set(MOTION_BUILD_BOOST_FROM_SOURCES ON)
+-set(Boost_URL "https://boostorg.jfrog.io/artifactory/main/release/1.76.0/source/boost_1_76_0.tar.bz2")
++set(Boost_URL "https://archives.boost.io/release/1.76.0/source/boost_1_76_0.tar.bz2")
+ set(Boost_URL_HASH_SHA256 "f0397ba6e982c4450f27bf32a2a83292aba035b827a5623a14636ea583318c41")
+ set(Boost_INSTALL ${CMAKE_CURRENT_BINARY_DIR}/extern/boost)
+ set(Boost_LIB_DIR ${Boost_INSTALL}/lib)
+diff --git a/docker/install_dependencies.sh b/docker/install_dependencies.sh
+index 47ce444..cb91a4c 100644
+--- a/docker/install_dependencies.sh
++++ b/docker/install_dependencies.sh
+@@ -1,8 +1,6 @@
+ # install g++
+-apt-add-repository -y ppa:ubuntu-toolchain-r/test
+-apt-get update
+-apt-get install -y g++-10
+-ln -sf /usr/bin/g++-10 /usr/bin/g++
++apt-get update && apt-get install -y g++-11
++ln -sf /usr/bin/g++-11 /usr/bin/g++
+ ln -sf /usr/bin/g++ /usr/bin/c++
+ 
+ # install cmake 3.19.5
+@@ -13,7 +11,7 @@ cp -r cmake-3.19.5-Linux-x86_64/share/* /usr/share/
+ rm -r cmake*
+ 
+ # compile and install boost
+-wget -O boost_1_76_0.tar.bz2 https://boostorg.jfrog.io/artifactory/main/release/1.76.0/source/boost_1_76_0.tar.bz2
++wget -O boost_1_76_0.tar.bz2 https://archives.boost.io/release/1.76.0/source/boost_1_76_0.tar.bz2
+ tar xjvf boost_1_76_0.tar.bz2
+ cd boost_1_76_0
+ ./bootstrap.sh --prefix=/usr/local --with-libraries=context,fiber,filesystem,log,system,thread,program_options,json
+diff --git a/src/examples/benchmark_providers/benchmark_providers_main.cpp b/src/examples/benchmark_providers/benchmark_providers_main.cpp
+index 0e5fa6b..62d5b16 100644
+--- a/src/examples/benchmark_providers/benchmark_providers_main.cpp
++++ b/src/examples/benchmark_providers/benchmark_providers_main.cpp
+@@ -64,19 +64,19 @@ int main(int ac, char* av[]) {
+ 
+   // clang-format off
+   std::vector<Combination> combinations = {
+-    {kAmt, 8, batch_size},
+-    {kAmt, 16, batch_size},
+-    {kAmt, 32, batch_size},
+-    {kAmt, 64, batch_size},
+-    {kBmt, 1, batch_size},
+-    {kSb, 8, batch_size},
+-    {kSb, 16, batch_size},
+-    {kSb, 32, batch_size},
+-    {kSb, 64, batch_size},
+-    {kSp, 8, batch_size},
+-    {kSp, 16, batch_size},
+-    {kSp, 32, batch_size},
+-    {kSp, 64, batch_size}
++    // {kAmt, 8, batch_size},
++    // {kAmt, 16, batch_size},
++    // {kAmt, 32, batch_size},
++    {kAmt, 64, batch_size}, // 532295680
++    {kBmt, 1, batch_size}, // 1596887040
++    // {kSb, 8, batch_size},
++    // {kSb, 16, batch_size},
++    // {kSb, 32, batch_size},
++    // {kSb, 64, batch_size},
++    // {kSp, 8, batch_size},
++    // {kSp, 16, batch_size},
++    // {kSp, 32, batch_size},
++    // {kSp, 64, batch_size}
+   };
+ 
+   std::vector<Combination> combinations_ots = {
+@@ -233,5 +233,6 @@ encrypto::motion::PartyPointer CreateParty(const program_options::variables_map&
+   const auto logging{!user_options.count("disable-logging")};
+   configuration->SetLoggingEnabled(logging);
+   configuration->SetOnlineAfterSetup(user_options["online-after-setup"].as<bool>());
++  configuration->SetNumOfThreads(32);
+   return party;
+ }
+diff --git a/src/examples/benchmark_providers/common/benchmark_providers.cpp b/src/examples/benchmark_providers/common/benchmark_providers.cpp
+index ba8e227..91c93cd 100644
+--- a/src/examples/benchmark_providers/common/benchmark_providers.cpp
++++ b/src/examples/benchmark_providers/common/benchmark_providers.cpp
+@@ -28,6 +28,7 @@
+ #include "multiplication_triple/mt_provider.h"
+ #include "multiplication_triple/sb_provider.h"
+ #include "multiplication_triple/sp_provider.h"
++#include "oblivious_transfer/base_ots/base_ot_provider.h"
+ #include "oblivious_transfer/ot_flavors.h"
+ #include "statistics/analysis.h"
+ #include "statistics/run_time_statistics.h"
+@@ -67,18 +68,24 @@ encrypto::motion::RunTimeStatistics BenchmarkProvider(encrypto::motion::PartyPoi
+         default:
+           throw std::invalid_argument("Unknown bitlength");
+       }
++      backend->GetBaseProvider().Setup();
+       mt_provider.PreSetup();
+       backend->GetOtProviderManager().PreSetup();
++      backend->GetBaseOtProvider().PreSetup();
+       backend->Synchronize();
++      backend->GetBaseOtProvider().ComputeBaseOts();
+       backend->OtExtensionSetup();
+       mt_provider.Setup();
+       break;
+     }
+     case Provider::kBmt: {
+       mt_provider.RequestBinaryMts(batch_size);
++      backend->GetBaseProvider().Setup();
+       mt_provider.PreSetup();
+       backend->GetOtProviderManager().PreSetup();
++      backend->GetBaseOtProvider().PreSetup();
+       backend->Synchronize();
++      backend->GetBaseOtProvider().ComputeBaseOts();
+       backend->OtExtensionSetup();
+       mt_provider.Setup();
+       break;
