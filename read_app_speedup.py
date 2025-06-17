@@ -1,10 +1,12 @@
 import os, json
 from collections import defaultdict 
 import numpy as np
+import re
 from pathlib import Path
 from argparse import ArgumentParser
 
 parser = ArgumentParser(description="Application Reader")
+parser.add_argument("--crypten-baseline", action="store_true", help="Use self benchmarked baseline numbers.")
 parser.add_argument("--num-repeats", type=int, default=1, help="Number of repeats for each log file.")
 args = parser.parse_args()
 
@@ -66,8 +68,44 @@ def read_log(prefix: str, name_conversion: dict[str, str]) -> dict[str, np.ndarr
 
     return buffer[prefix]
 
-embedding_baseline_lan_time = 12868
-embedding_baseline_wan_time = 109774
+def read_crypten_baseline_log(netconf: int):
+    mt_log_path = Path(__file__).parent / f"logs/applications/embedding-baseline-mt-netconf{netconf}.log"
+    online_log_path = Path(__file__).parent / f"logs/applications/embedding-baseline-online-netconf{netconf}.log"
+
+    online_time = 0.0
+    num_arith_mt = 0
+    num_binary_mt = 0
+    mt_times = []
+
+    for line in open(online_log_path).readlines():
+        match = re.match(r"Total: elapsed ([\d\.]+) s", line)
+        if match:
+            online_time = float(match.group(1))
+
+        match = re.match(r"Num arithmetic triples generated = (\d+)", line)
+        if match:
+            num_arith_mt = int(match.group(1))
+            
+        match = re.match(r"Num binary triples generated = (\d+)", line)
+        if match:
+            num_binary_mt = int(match.group(1))
+    
+    for line in open(mt_log_path).readlines():
+        match = re.match(r"Circuit Evaluation\ +([\d\.]+) ms\ +([\d\.]+) ms\ +([\d\.]+) ms", line)
+        if match:
+            mt_times.append(float(match.group(1)) / (2**16))
+
+    assert len(mt_times) == 2
+    setup_time = (mt_times[0] * num_arith_mt + mt_times[1] * num_binary_mt) / 1e3
+
+    return setup_time + online_time
+
+if args.crypten_baseline:
+    embedding_baseline_lan_time = read_crypten_baseline_log(1)
+    embedding_baseline_wan_time = read_crypten_baseline_log(4)
+else:
+    embedding_baseline_lan_time = 12868
+    embedding_baseline_wan_time = 109774
 embedding_fable_lan_time = read_log(logs_applications_folder / "embedding-FABLE-netconf1", {"Embedding Lookup": "Embedding Lookup"})["Embedding Lookup"] / 1e3
 embedding_fable_wan_time = read_log(logs_applications_folder / "embedding-FABLE-netconf4", {"Embedding Lookup": "Embedding Lookup"})["Embedding Lookup"] / 1e3
 

@@ -11,7 +11,7 @@ from pathlib import Path
 from argparse import ArgumentParser
 
 parser = ArgumentParser(description="Draw plots from FABLE logs.")
-parser.add_argument("--doram-baseline", action="store_true", help="Use the provided baseline numbers.")
+parser.add_argument("--doram-baseline", action="store_true", help="Use self-benchmarked baseline numbers.")
 parser.add_argument("--num-repeats", type=int, default=1, help="Number of repeats for each log file.")
 args = parser.parse_args()
 

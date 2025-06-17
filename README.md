@@ -121,3 +121,4 @@ bash Crypten/reproduce.sh 1 $HOST $CLIENT
 ```
 on the host and the client respectively. 
 
+Afterwards, you should be able to pass `--crypten-baseline` to `python3 read_app_speedup.py` to see the speedup with your benchmarked results. 
