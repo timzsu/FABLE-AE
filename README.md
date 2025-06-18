@@ -4,7 +4,7 @@ This is the artifact evaluation repository of the USENIX Security '25 paper "FAB
 
 The main implementation is at https://github.com/timzsu/FABLE, and the paper can be found at https://eprint.iacr.org/2025/1081. 
 
-This version is for availability evaluation, where we provide
+This version is for functionality and reproducibility evaluation, where we provide
 1. The code for the FABLE protocol plus the two applications. 
 2. The instructions to build and execute the protocol. 
 3. The instructions to reproduce all experiments in the paper. 
