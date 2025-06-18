@@ -1,9 +1,9 @@
-import os, json
 from collections import defaultdict 
 import numpy as np
 import re
 from pathlib import Path
 from argparse import ArgumentParser
+from typing import Dict, Tuple, DefaultDict
 
 parser = ArgumentParser(description="Application Reader")
 parser.add_argument("--crypten-baseline", action="store_true", help="Use self benchmarked baseline numbers.")
@@ -13,7 +13,7 @@ args = parser.parse_args()
 logs_applications_folder = Path(__file__).parent / "logs/applications"
 num_repeats = args.num_repeats
 
-def read_single_log(log_file_path, name_conversion: dict[str, str] = {"FABLE Execution": "FABLE"}) -> tuple[defaultdict[str, np.ndarray], defaultdict[str, np.ndarray]]:
+def read_single_log(log_file_path, name_conversion: Dict[str, str] = {"FABLE Execution": "FABLE"}) -> Tuple[DefaultDict[str, np.ndarray], DefaultDict[str, np.ndarray]]:
     assert Path(log_file_path).exists(), f"Log file {log_file_path} does not exist."
     with open(log_file_path, 'r') as file:
         lines = file.readlines()
@@ -41,7 +41,7 @@ def read_single_log(log_file_path, name_conversion: dict[str, str] = {"FABLE Exe
     return time_list, comm_list
 
 buffer = {}
-def read_log(prefix: str, name_conversion: dict[str, str]) -> dict[str, np.ndarray]:
+def read_log(prefix: str, name_conversion: Dict[str, str]) -> Dict[str, np.ndarray]:
     if not isinstance(prefix, str):
         prefix = str(prefix)
     if prefix not in buffer:
@@ -68,7 +68,7 @@ def read_log(prefix: str, name_conversion: dict[str, str]) -> dict[str, np.ndarr
 
     return buffer[prefix]
 
-def read_crypten_baseline_log(netconf: int):
+def read_crypten_baseline_log(netconf: int) -> float:
     mt_log_path = Path(__file__).parent / f"logs/applications/embedding-baseline-mt-netconf{netconf}.log"
     online_log_path = Path(__file__).parent / f"logs/applications/embedding-baseline-online-netconf{netconf}.log"
 

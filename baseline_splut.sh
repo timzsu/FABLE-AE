@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Scripts to launch SPLUT baseline experiments. 
+# Scripts to launch SPLUT baseline experiments. Approximately take less than half an hour.
 
 R=$1
 HOST=${2:-'127.0.0.1'}

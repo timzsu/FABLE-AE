@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Run a command on all three repro scripts
+# Approximately take 1.5 hours
 
 # cd into the directory containing this script (from the bash faq 028)
 if [[ $BASH_SOURCE = */* ]]; then

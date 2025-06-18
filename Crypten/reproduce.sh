@@ -4,6 +4,8 @@ CLIENT=$3
 PORT_HOST=${4:-8100}
 PORT_CLIENT=${5:-8200}
 
+# Approximately take 1 hour
+
 NET_INTERFACE="$(ip link show | grep UP | sed -n '2p' | awk '{print $2}' | cut -d: -f1 | cut -d@ -f1)"
 
 netunset() {

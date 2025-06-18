@@ -140,7 +140,7 @@ def read_log(inbit: int, outbit: int, network: int, bs: int, thr: int, hash_type
     return buffer[(inbit, outbit, network, bs, thr, hash_type)][int(comm)]
 
 def splut_client_log_name(inbit: int, outbit: int, network: int, bs: int, thr: int, repeat_id: int) -> Path:
-    return logs_baseline_client_folder / f"splut-in{inbit}-out{outbit}-netconf{network+1}-bs{bs}-thr{thr}-{repeat_id+1}.log"
+    return logs_baseline_client_folder / f"splut/splut-in{inbit}-out{outbit}-netconf{network+1}-bs{bs}-thr{thr}-{repeat_id+1}.log"
 
 def read_splut_client_log(inbit: int, outbit: int, network: int, bs: int, thr: int, name_conversion: dict[str, str]) -> dict[str, np.ndarray]:
     log_result = []

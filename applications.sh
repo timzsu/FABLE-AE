@@ -3,7 +3,7 @@ HOST=${2:-'127.0.0.1'}
 NUM_REPEAT=${3:-1}
 FABLE_DIR=${4:-'/workspace/FABLE'}
 
-# Scripts to launch applications. Approximately take 2 hours. 
+# Scripts to launch applications. Approximately take 1.5 hours. 
 
 NET_INTERFACE="$(ip link show | grep UP | sed -n '2p' | awk '{print $2}' | cut -d: -f1 | cut -d@ -f1)"
 

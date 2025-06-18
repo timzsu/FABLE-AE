@@ -57,11 +57,11 @@ FLORAM and 2P-DUORAM are benchmarked using their official implementation. You ca
 
 To do this, exit the docker for `FABLE-AE` and build their docker with
 ```bash
-sudo bash ORAMs/build-dockers.sh
+sudo bash FABLE-AE/ORAMs/build-dockers.sh
 ```
 Then run the experiments with 
 ```bash
-sudo bash ORAMs/repro-dockers.sh
+sudo bash FABLE-AE/ORAMs/repro-dockers.sh
 ```
 
 ## Plots
@@ -76,7 +76,7 @@ bash sync_log_recv.sh $CLIENT
 ```
 on the server (the first machine), where `$CLIENT` is the IP address of the client. 
 
-To plot the figures, please run 
+To plot the figures, please make sure that you are inside the container `fable-ae`, as it contains the necessary plotting scripts. Then run 
 1. `python3 microbench.py`, which will produce `FABLE-AE/plots/runtime_vs_threads.pdf` (Figure 4). 
 2. `python3 draw.py`, which will produce
     1. `FABLE-AE/plots/time_lutsize_network_clipped.pdf` (Figure 5)
@@ -108,15 +108,17 @@ To build the docker,
 ```bash
 sudo docker build FABLE-AE/Crypten -t crypten
 ```
+Then launch the docker with
+```bash
+sudo docker run -it --net=host --cap-add=NET_ADMIN -v $PWD/FABLE-AE:/workspace/AE -w /workspace/AE crypten
+```
 
 To reproduce the performance, run
 ```bash
-sudo docker run -it --net=host --cap-add=NET_ADMIN -v $PWD/FABLE-AE:/workspace/AE -w /workspace/AE crypten
 bash Crypten/reproduce.sh 0 $HOST $CLIENT
 ```
 and
 ```bash
-sudo docker run -it --net=host --cap-add=NET_ADMIN -v $PWD/FABLE-AE:/workspace/AE -w /workspace/AE crypten
 bash Crypten/reproduce.sh 1 $HOST $CLIENT
 ```
 on the host and the client respectively. 
